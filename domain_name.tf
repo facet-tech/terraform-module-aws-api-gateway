@@ -3,7 +3,7 @@ locals {
   nonprod_domain_part          = var.is_prod ? "" : "nonprod."
   domain_zone_name             = var.create_custom_domain ? data.aws_route53_zone.zone[0].name : ""
   route53_live_full_url        = "${var.route53_record_name}.${local.domain_zone_name}"
-  route53_test_full_url        = "test-${var.route53_record_name}.${local.domain_zone_name}"
+  route53_test_full_url        = "test.${var.route53_record_name}.${local.domain_zone_name}"
   regional_certificate_arn     = contains(var.endpoint_configuration_types, "REGIONAL") ? var.certificate_arn : null
   edge_certificate_arn         = contains(var.endpoint_configuration_types, "EDGE") ? var.certificate_arn : null
 }
