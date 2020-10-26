@@ -4,7 +4,7 @@ A Terraform module for creating aws api gateway dynamically.  Creates rest api, 
 ### Code Example
 ```
 module "api_gateway" {
-  source              = "git@github.com:facets-io/terraform-module-aws-api-gateway.git?ref=1.0.3"
+  source              = "git@github.com:facets-io/terraform-module-aws-api-gateway.git?ref=0.0.2"
   name                = "my-api-gateway"
   environment         = "dev"
   description         = "This is my API"

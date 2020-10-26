@@ -46,7 +46,8 @@ variable "ip_whitelist" {
 }
 
 variable "authorizers" {
-  type = any
+  type    = any
+  default = []
 }
 
 variable "authorizer_default" {
@@ -111,8 +112,8 @@ variable "aws_api_gateway_stage_default" {
 variable endpoints {
   type = any
 }
-################ ---------- DEFAULTS ------------------ ####################g
-variable "method_request_default" {
+
+variable "method_default" {
   type = object({
     method               = string
     authorization        = string
@@ -137,43 +138,7 @@ variable "method_request_default" {
   }
 }
 
-variable "integration_request_default" {
-  type = object({
-    integration_http_method = string
-    type                    = string
-    connection_type         = string
-    connection_id           = string
-    credentials             = string
-    request_templates       = map(string)
-    request_parameters      = map(string)
-    passthrough_behavior    = string
-    cache_key_parameters    = list(string)
-    cache_namespace         = string
-    content_handling        = string
-    timeout_milliseconds    = number
-    uri                     = string
-  })
-
-  default = {
-    type                    = "MOCK"
-    integration_http_method = null
-    connection_type         = "INTERNET"
-    connection_id           = ""
-    credentials             = ""
-    request_templates       = {
-      "application/json" = ""
-    }
-    request_parameters      = {}
-    passthrough_behavior    = "WHEN_NO_TEMPLATES"
-    cache_key_parameters    = []
-    cache_namespace         = ""
-    content_handling        = "CONVERT_TO_TEXT"
-    timeout_milliseconds    = "29000"
-    uri                     = null #"arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:696666127573:function:CognitoAuth/invocations"
-  }
-}
-
-variable "integration_request_lambda_default" {
+variable "integration_default" {
   type = object({
     integration_http_method = string
     type                    = string
@@ -209,38 +174,8 @@ variable "integration_request_lambda_default" {
   }
 }
 
-variable "integration_response_default" {
-  type    = map(object({
-    status_code         = number
-    selection_pattern   = string
-    response_templates  = map(string)
-    response_parameters = map(string)
-    content_handling    = string
-  }))
-  default = {
-    200 = {
-      status_code         = 200
-      selection_pattern   = ""
-      response_templates  = {
-        "application/json" = ""
-      }
-      response_parameters = {}
-      content_handling    = null
-    },
-    500 = {
-      status_code         = 500
-      selection_pattern   = "Error"
-      response_templates  = {
-        "application/json" = ""
-      }
-      response_parameters = {}
-      content_handling    = null
-    }
-  }
-}
 
-// DONE
-variable "method_response_default" {
+variable "response_default" {
   type = map(object({
     status_code         = number
     response_models     = map(string)
@@ -265,32 +200,32 @@ variable "method_response_default" {
   }
 }
 
-variable "method_default" {
-  type = object({
-    method               = string
-    authorization        = string
-    authorizer_id        = string
-    authorization_scopes = list(string)
-    api_key_required     = bool
-    request_models       = map(string)
-    request_validator_id = string
-    request_parameters   = map(string)
-  })
-
-  //Empty string instead of null because merge removes empty string from list
+variable "response_intergration_default" {
+  type    = map(object({
+    selection_pattern   = string
+    response_templates  = map(string)
+    response_parameters = map(string)
+    content_handling    = string
+  }))
   default = {
-    method               = "GET"
-    authorization        = "NONE"
-    authorizer_id        = null
-    authorization_scopes = []
-    api_key_required     = false
-    request_models       = {}
-    request_validator_id = ""
-    request_parameters   = {}
+    200 = {
+      selection_pattern   = ""
+      response_templates  = {
+        "application/json" = ""
+      }
+      response_parameters = {}
+      content_handling    = null
+    },
+    500 = {
+      selection_pattern   = "Error"
+      response_templates  = {
+        "application/json" = ""
+      }
+      response_parameters = {}
+      content_handling    = null
+    }
   }
 }
-
-################ ---------- END DEFAULTS ------------------ ####################
 
 variable "constants" {
   type    = object({
@@ -455,60 +390,3 @@ variable "route53_record_allow_overwrite" {
   description = "(Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not affect the ability to update the record in Terraform and does not prevent other resources within Terraform or manual Route 53 changes outside Terraform from overwriting this record. false by default. This configuration is not recommended for most environments."
   default     = null
 }
-
-/*
-variable "route53_record_failover_routing_policy" {
-  type        = string
-  description = "(Optional) A block indicating the routing behavior when associated health check fails. Conflicts with any other routing policy. Documented below."
-  default     = null
-}
-variable "route53_record_geolocation_routing_policy" {
-  type        = string
-  description = "(Optional) A block indicating a routing policy based on the geolocation of the requestor. Conflicts with any other routing policy. Documented below."
-  default     = null
-}
-variable "route53_record_latency_routing_policy" {
-  type        = string
-  description = "(Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. Documented below."
-  default     = null
-}
-variable "route53_record_weighted_routing_policy" {
-  type        = string
-  description = "(Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. Documented below."
-  default     = null
-}
-variable "route53_record_multivalue_answer_routing_policy" {
-  type        = string
-  description = "(Optional) Set to true to indicate a multivalue answer routing policy. Conflicts with any other routing policy."
-  default     = null
-}
-*/
-
-/*
-// Imperva configurations
-variable "imperva_account_id" {
-  type        = string
-  description = "(Optional) The account to operate on. If not specified, operation will be performed on the account identified by the authentication parameters."
-  default     = null
-}
-variable "imperva_send_site_setup_emails" {
-  type        = bool
-  description = "(Optional) If this value is false, end users will not get emails about the add site process such as DNS instructions and SSL setup."
-  default     = null
-}
-variable "imperva_force_ssl" {
-  type        = bool
-  description = "(Optional) Force SSL. This option is only available for sites with manually configured IP/CNAME and for specific accounts."
-  default     = true
-}
-variable "imperva_log_level" {
-  type        = string
-  description = "(Optional) Log level. Available only for Enterprise Plan customers that purchased the Logs Integration SKU. Sets the log reporting level for the site. Options are full, security, none, and default."
-  default     = null
-}
-variable "imperva_logs_account_id" {
-  type        = string
-  description = "(Optional) Account where logs should be stored. Available only for Enterprise Plan customers that purchased the Logs Integration SKU. Numeric identifier of the account that purchased the logs integration SKU and which collects the logs. If not specified, operation will be performed on the account identified by the authentication parameters."
-  default     = null
-}
-*/
