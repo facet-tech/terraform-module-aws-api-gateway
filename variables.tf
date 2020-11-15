@@ -360,6 +360,24 @@ variable "certificate_private_key" {
   description = "(Optional) The private key associated with the domain certificate given in certificate_body. Only valid for EDGE endpoint configuration type. Conflicts with certificate_arn, regional_certificate_arn, and regional_certificate_name."
   default     = null
 }
+
+variable "iam_role_description" {
+  type        = string
+  description = "The description of the iam role attached to the api gateway resource."
+  default     = "The IAM role attached to API gateway."
+}
+
+variable "iam_role_name_prefix" {
+  default     = "api-gateway-"
+  description = "The prefix added to the name of the IAM role."
+}
+
+variable "iam_role_force_detach_policies" {
+  type        = bool
+  description = "Specifies to force detaching any policies for the api gateway iam role has before destroying it.d"
+  default     = false
+}
+
 variable "regional_certificate_name" {
   type        = string
   description = "(Optional) The user-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with certificate_arn, certificate_name, certificate_body, certificate_chain, and certificate_private_key."

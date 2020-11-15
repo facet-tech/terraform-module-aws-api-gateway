@@ -1,5 +1,8 @@
+locals {
+  resource_base_name = "${var.name}-${var.environment}"
+}
 resource "aws_api_gateway_rest_api" "rest_api" {
-  name = "${var.name}-${var.environment}"
+  name = local.resource_base_name
 
   endpoint_configuration {
     types            = var.endpoint_configuration_types

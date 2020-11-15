@@ -1,59 +1,32 @@
 locals {
   path_parts_map = toset(flatten([
-  for path in var.endpoints[*].path: [
-  for count in range(0, length(split("/", path))): {
-    path             = trim(regex(join("", [
-      "(?:[^/]*/*){",
-      count + 1,
-      "}"]), path), "/")
-    path_hash        = md5(trim(regex(join("", [
-      "(?:[^/]*/*){",
-      count + 1,
-      "}"]), path), "/"))
-    path_parent      = trim(regex(join("", [
-      "(?:[^/]*/*){",
-      count,
-      "}"]), path), "/")
-    path_parent_hash = md5(trim(regex(join("", [
-      "(?:[^/]*/*){",
-      count,
-      "}"]), path), "/"))
-    path_part        = split("/", path)[count]
-    path_part_hash   = md5(split("/", path)[count])
-  }
-  ]
+     for path in var.endpoints[*].path: [
+       for count in range(0, length(split("/", path))): {
+          path             =     trim(regex(join("", ["(?:[^/]*/*){", count + 1, "}"]), path), "/")
+          path_hash        = md5(trim(regex(join("", ["(?:[^/]*/*){", count + 1, "}"]), path), "/"))
+          path_parent      =     trim(regex(join("", ["(?:[^/]*/*){", count,     "}"]), path), "/")
+          path_parent_hash = md5(trim(regex(join("", ["(?:[^/]*/*){", count,     "}"]), path), "/"))
+          path_part        =     split("/", path)[count]
+          path_part_hash   = md5(split("/", path)[count])
+       }
+     ]
   ]))
 
   endpoints = flatten([
-  for endpoint in var.endpoints[*]: [
-  for method in endpoint.methods:  {
-    path        = replace(endpoint.path, "/^//", "")
-    method      = merge(var.method_default, method)
-    integration = merge(var.integration_default, method.integration_request)
-    //subobject?
-  }
-  ]
+     for endpoint in var.endpoints[*]: [
+        for method in endpoint.methods:  {
+           path        = replace(endpoint.path, "/^//", "")
+           method      = merge(var.method_default, method)
+           integration = merge(var.integration_default, method.integration_request)
+           //subobject?
+        }
+     ]
   ])
 
   path_endpoint_map = {
-  for endpoint in local.endpoints:
-  endpoint.path => endpoint
+     for endpoint in local.endpoints:
+        endpoint.path => endpoint
   }
-
-  endpoints_respones = flatten([
-  for endpoint in var.endpoints[*]: [
-  for method in endpoint.methods:  [
-  for response in lookup(method, "responses", list(var.response_default[200])): {
-    path        = replace(endpoint.path, "/^//", "")
-    method      = method.method
-    status_code = response.status_code
-    response    = merge(var.response_default[response.status_code], response)
-    integration = merge(var.response_intergration_default, lookup(response, "integration", var.response_intergration_default[response.status_code]))
-    //merge(var.response_intergration_default, response.integration) //subobject?
-  }
-  ]
-  ]]
-  )
 }
 
 output "endpoints" {
@@ -85,7 +58,7 @@ resource "aws_api_gateway_integration" "integrations" {
   connection_type         = each.value.integration.connection_type
   connection_id           = each.value.integration.connection_id
   uri                     = each.value.integration.uri
-  credentials             = each.value.integration.credentials
+  credentials             = aws_iam_role.role.arn
   request_templates       = each.value.integration.request_templates
   request_parameters      = each.value.integration.request_parameters
   passthrough_behavior    = each.value.integration.passthrough_behavior
@@ -93,30 +66,5 @@ resource "aws_api_gateway_integration" "integrations" {
   cache_namespace         = each.value.integration.cache_namespace
   content_handling        = each.value.integration.content_handling
   timeout_milliseconds    = each.value.integration.timeout_milliseconds
-
   depends_on              = [aws_cloudformation_stack.resources, aws_api_gateway_method.methods]
 }
-
-/*resource "aws_api_gateway_method_response" "method_responses" {
-  count               = length(local.endpoints_respones)
-  resource_id         = lookup(aws_cloudformation_stack.resources.outputs,md5(local.endpoints_respones[count.index].path),count.index)
-  rest_api_id         = aws_api_gateway_rest_api.rest_api.id
-  http_method         = local.endpoints_respones[count.index].method
-  status_code         = local.endpoints_respones[count.index].status_code
-  response_models     = local.endpoints_respones[count.index].response.response_models
-  response_parameters = local.endpoints_respones[count.index].response.response_parameters
-  depends_on          = [aws_api_gateway_method.methods]
-}*/
-
-/*resource "aws_api_gateway_integration_response" "integration_responses" {
-  count               = length(local.endpoints_respones)
-  resource_id         = lookup(aws_cloudformation_stack.resources.outputs,md5(local.endpoints_respones[count.index].path),count.index)
-  rest_api_id         = aws_api_gateway_rest_api.rest_api.id
-  http_method         = local.endpoints_respones[count.index].method
-  status_code         = local.endpoints_respones[count.index].status_code
-  selection_pattern   = local.endpoints_respones[count.index].integration.selection_pattern
-  response_templates  = local.endpoints_respones[count.index].integration.response_templates
-  response_parameters = local.endpoints_respones[count.index].integration.response_parameters
-  content_handling    = local.endpoints_respones[count.index].integration.content_handling
-  depends_on          = [aws_api_gateway_method.methods, aws_api_gateway_method_response.method_responses]
-}*/
